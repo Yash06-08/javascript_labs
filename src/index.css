@@ -998,6 +998,16 @@ a:hover {
   color: var(--color-warning);
 }
 
+.console-result .console-content {
+  color: var(--color-success);
+  font-weight: 500;
+}
+
+.console-result .console-prefix {
+  color: var(--color-success);
+}
+
+
 .console-empty {
   color: var(--color-text-muted);
   font-size: 0.875rem;

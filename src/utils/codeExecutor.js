@@ -261,6 +261,7 @@ export function executeSync(userCode, exercise) {
 
 /**
  * Execute full program synchronously (fallback when Worker is unavailable)
+ * Also evaluates and displays the result of the last expression
  * @param {string} userCode - The user's code to execute as a full program
  * @returns {Object} Execution result
  */
@@ -272,24 +273,23 @@ export function executeProgramSync(userCode) {
   const originalError = console.error;
   const originalWarn = console.warn;
 
+  const formatArg = (arg) => {
+    if (arg === null) return 'null';
+    if (arg === undefined) return 'undefined';
+    if (typeof arg === 'object') {
+      try { return JSON.stringify(arg); } catch { return String(arg); }
+    }
+    return String(arg);
+  };
+
   console.log = (...args) => {
-    capturedLogs.push({
-      type: 'log',
-      content: args.map(arg => {
-        if (arg === null) return 'null';
-        if (arg === undefined) return 'undefined';
-        if (typeof arg === 'object') {
-          try { return JSON.stringify(arg); } catch { return String(arg); }
-        }
-        return String(arg);
-      }).join(' ')
-    });
+    capturedLogs.push({ type: 'log', content: args.map(formatArg).join(' ') });
   };
   console.error = (...args) => {
-    capturedLogs.push({ type: 'error', content: args.map(a => String(a)).join(' ') });
+    capturedLogs.push({ type: 'error', content: args.map(formatArg).join(' ') });
   };
   console.warn = (...args) => {
-    capturedLogs.push({ type: 'warn', content: args.map(a => String(a)).join(' ') });
+    capturedLogs.push({ type: 'warn', content: args.map(formatArg).join(' ') });
   };
 
   try {
@@ -301,25 +301,65 @@ export function executeProgramSync(userCode) {
     try {
       run();
     } catch (runtimeError) {
+      // Handle "return outside function" error
+      if (runtimeError.message.includes('return')) {
+        const codeWithoutReturn = userCode.replace(/\breturn\s+/g, '');
+        try {
+          const evalResult = new Function(`
+            'use strict';
+            ${codeWithoutReturn}
+            return (${codeWithoutReturn.split(';').filter(s => s.trim()).pop()?.trim() || 'undefined'});
+          `)();
+
+          if (evalResult !== undefined) {
+            capturedLogs.push({ type: 'result', content: `→ ${formatArg(evalResult)}` });
+          }
+
+          console.log = originalLog; console.error = originalError; console.warn = originalWarn;
+          return { success: true, logs: capturedLogs, executionTime: performance.now() - startTime };
+        } catch {
+          // Fall through
+        }
+      }
+
       console.log = originalLog; console.error = originalError; console.warn = originalWarn;
       return {
         success: false,
         error: {
           type: 'RuntimeError',
           message: runtimeError.message,
-          hint: 'Check the variables and expressions you are executing.'
+          hint: runtimeError.message.includes('return')
+            ? 'The "return" keyword only works inside functions. Use console.log() to display values.'
+            : 'Check the variables and expressions you are executing.'
         },
         logs: capturedLogs,
         executionTime: performance.now() - startTime
       };
     }
 
+    // If no output, try to evaluate last expression
+    if (capturedLogs.length === 0) {
+      try {
+        const lines = userCode.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//'));
+        const lastLine = lines[lines.length - 1];
+
+        const evalFn = new Function(`
+          'use strict';
+          ${userCode}
+          try { return eval(${JSON.stringify(lastLine.replace(/;$/, ''))}); } catch { return undefined; }
+        `);
+
+        const result = evalFn();
+        if (result !== undefined) {
+          capturedLogs.push({ type: 'result', content: `→ ${formatArg(result)}` });
+        }
+      } catch {
+        // Ignore
+      }
+    }
+
     console.log = originalLog; console.error = originalError; console.warn = originalWarn;
-    return {
-      success: true,
-      logs: capturedLogs,
-      executionTime: performance.now() - startTime
-    };
+    return { success: true, logs: capturedLogs, executionTime: performance.now() - startTime };
 
   } catch (syntaxError) {
     console.log = originalLog; console.error = originalError; console.warn = originalWarn;
@@ -335,6 +375,7 @@ export function executeProgramSync(userCode) {
     };
   }
 }
+
 
 /**
  * Deep equality check

@@ -183,31 +183,94 @@ function executeCode(userCode, functionName, testCases) {
 
 /**
  * Execute a full program (no function required)
- * Runs the user code and only captures output/errors
+ * Runs the user code and captures output/errors
+ * Also evaluates and displays the result of the last expression
  */
 function executeProgram(userCode) {
   capturedLogs = [];
   const startTime = performance.now();
 
   try {
-    const run = new Function(`
+    // First, run the code as statements (captures console.log output)
+    const runStatements = new Function(`
       'use strict';
       ${userCode}
     `);
 
+    let statementResult;
     try {
-      run();
+      statementResult = runStatements();
     } catch (runtimeError) {
+      // Check if it's a "return outside function" error
+      if (runtimeError.message.includes('return')) {
+        // Try evaluating without 'return' - the user might want to see a value
+        const codeWithoutReturn = userCode.replace(/\breturn\s+/g, '');
+        try {
+          const evalResult = new Function(`
+            'use strict';
+            ${codeWithoutReturn}
+            return (${codeWithoutReturn.split(';').filter(s => s.trim()).pop()?.trim() || 'undefined'});
+          `)();
+
+          if (evalResult !== undefined) {
+            capturedLogs.push({
+              type: 'result',
+              content: `→ ${formatArg(evalResult)}`
+            });
+          }
+
+          return {
+            success: true,
+            logs: capturedLogs,
+            executionTime: performance.now() - startTime
+          };
+        } catch {
+          // Fall through to original error
+        }
+      }
+
       return {
         success: false,
         error: {
           type: 'RuntimeError',
           message: runtimeError.message,
-          hint: 'Check the variables and expressions you are executing.'
+          hint: runtimeError.message.includes('return')
+            ? 'The "return" keyword only works inside functions. Use console.log() to display values, or just write the expression directly.'
+            : 'Check the variables and expressions you are executing.'
         },
         logs: capturedLogs,
         executionTime: performance.now() - startTime
       };
+    }
+
+    // If no console output yet, try to evaluate the last expression
+    if (capturedLogs.length === 0) {
+      try {
+        // Get the last meaningful expression from the code
+        const lines = userCode.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//'));
+        const lastLine = lines[lines.length - 1];
+
+        // Try to evaluate the entire code and get its return value
+        const evalFn = new Function(`
+          'use strict';
+          ${userCode}
+          try {
+            return eval(${JSON.stringify(lastLine.replace(/;$/, ''))});
+          } catch {
+            return undefined;
+          }
+        `);
+
+        const result = evalFn();
+        if (result !== undefined) {
+          capturedLogs.push({
+            type: 'result',
+            content: `→ ${formatArg(result)}`
+          });
+        }
+      } catch {
+        // Ignore - just means we couldn't evaluate an expression
+      }
     }
 
     return {
@@ -229,6 +292,7 @@ function executeProgram(userCode) {
     };
   }
 }
+
 
 // Handle messages from main thread
 self.onmessage = function (e) {

@@ -86,6 +86,53 @@ export function getOverallProgress(lessons) {
 export function clearProgress() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(ATTEMPTS_KEY);
+  localStorage.removeItem(CODE_KEY);
+}
+
+// ==================== CODE STORAGE ====================
+
+const CODE_KEY = 'js-labs-code';
+
+/**
+ * Save exercise code to localStorage
+ * @param {string} exerciseId - The ID of the exercise
+ * @param {string} code - The code to save
+ */
+export function saveExerciseCode(exerciseId, code) {
+  try {
+    const data = localStorage.getItem(CODE_KEY);
+    const codes = data ? JSON.parse(data) : {};
+    codes[exerciseId] = code;
+    localStorage.setItem(CODE_KEY, JSON.stringify(codes));
+  } catch (e) {
+    console.error('Error saving code to localStorage:', e);
+  }
+}
+
+/**
+ * Get saved exercise code from localStorage
+ * @param {string} exerciseId - The ID of the exercise
+ * @returns {string|null} The saved code or null
+ */
+export function getExerciseCode(exerciseId) {
+  try {
+    const data = localStorage.getItem(CODE_KEY);
+    if (data) {
+      const codes = JSON.parse(data);
+      return codes[exerciseId] || null;
+    }
+  } catch (e) {
+    console.error('Error reading code from localStorage:', e);
+  }
+  return null;
+}
+
+/**
+ * Mark an exercise as complete (alias for setExerciseCompleted)
+ * @param {string} exerciseId - The ID of the exercise
+ */
+export function markExerciseComplete(exerciseId) {
+  setExerciseCompleted(exerciseId);
 }
 
 // ==================== FAILED ATTEMPTS TRACKING ====================
@@ -93,6 +140,7 @@ export function clearProgress() {
 const ATTEMPTS_KEY = 'js-labs-attempts';
 
 /**
+
  * Get failed attempts for a specific exercise
  * @param {string} exerciseId - The ID of the exercise
  * @returns {number} Number of failed attempts
@@ -154,5 +202,8 @@ export default {
   clearProgress,
   getFailedAttempts,
   incrementFailedAttempts,
-  resetFailedAttempts
+  resetFailedAttempts,
+  saveExerciseCode,
+  getExerciseCode,
+  markExerciseComplete
 };

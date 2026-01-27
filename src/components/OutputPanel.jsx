@@ -32,18 +32,21 @@ function OutputPanel({ logs, executionTime, isVisible }) {
               logs.map((log, index) => (
                 <div key={index} className={`console-line console-${log.type}`}>
                   <span className="console-prefix">
-                    {log.type === 'error' ? '❌' : log.type === 'warn' ? '⚠️' : '›'}
+                    {log.type === 'error' ? '❌' :
+                      log.type === 'warn' ? '⚠️' :
+                        log.type === 'result' ? '←' : '›'}
                   </span>
                   <span className="console-content">{log.content}</span>
                 </div>
               ))
             ) : (
               <div className="console-empty">
-                No console output. Use console.log() to see output here.
+                Run your code to see output here.
               </div>
             )}
           </div>
         )}
+
       </div>
     </div>
   );
