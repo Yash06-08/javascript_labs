@@ -1,0 +1,35 @@
+.run-banner {
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  animation: bannerFadeIn 220ms ease-out, bannerSlideIn 220ms ease-out;
+}
+
+.run-banner.success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1px solid rgba(72, 187, 120, 0.4);
+}
+
+.run-banner.info {
+  background: rgba(66, 153, 225, 0.12);
+  color: var(--color-accent);
+  border: 1px solid rgba(66, 153, 225, 0.3);
+}
+
+.run-banner.error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1px solid rgba(245, 101, 101, 0.4);
+}
+
+@keyframes bannerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bannerSlideIn {
+  from { transform: translateY(-4px); }
+  to { transform: translateY(0); }
+}
