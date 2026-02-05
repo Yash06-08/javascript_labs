@@ -1,0 +1,137 @@
+/* Responsive UI overrides (UI only) */
+
+/* Global: prevent horizontal page scroll */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Menu toggle hide/show (used by scroll direction) */
+.menu-toggle {
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+
+.menu-toggle.hidden {
+  transform: translateY(-12px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app {
+  overflow-x: hidden;
+}
+
+/* Flex children can overflow unless min-width is reset */
+.main-content {
+  min-width: 0;
+}
+
+.lesson-page,
+.home-page {
+  max-width: 100%;
+}
+
+/* Wrap long tokens that can force the layout wider */
+.lesson-content,
+.exercise-task,
+.test-results,
+.output-panel {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.lesson-content pre,
+.solution-code {
+  max-width: 100%;
+}
+
+.lesson-content pre code,
+.solution-code code,
+.test-comparison code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 900px) {
+  .lesson-header {
+    padding-top: 64px;
+  }
+
+  .lesson-nav {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .lesson-title {
+    font-size: 1.6rem;
+    line-height: 1.2;
+  }
+
+  .exercises-section {
+    padding: 0;
+  }
+
+  .exercise-header {
+    gap: 10px;
+  }
+
+  .exercise-task {
+    font-size: 0.95rem;
+    line-height: 1.25;
+  }
+
+  .code-editor-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .btn.btn-sm {
+    height: 36px;
+  }
+
+  .code-editor {
+    min-height: 240px;
+  }
+
+  .output-panel,
+  .test-results {
+    overflow-x: auto;
+  }
+
+  .lesson-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .lesson-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .lesson-header {
+    padding-top: 70px;
+  }
+
+  .menu-toggle {
+    width: 42px;
+    height: 42px;
+  }
+
+  .lesson-title {
+    font-size: 1.4rem;
+  }
+
+  .exercise-number {
+    min-width: 28px;
+  }
+}

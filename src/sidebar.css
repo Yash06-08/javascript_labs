@@ -1,0 +1,94 @@
+/* Sidebar collapse/expand overrides (no JS logic changes) */
+
+:root {
+  --sidebar-ease: cubic-bezier(0.2, 0.9, 0.2, 1);
+  --sidebar-duration: 320ms;
+}
+
+.sidebar {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.main-content {
+  transition: margin-left var(--sidebar-duration) var(--sidebar-ease);
+}
+
+.sidebar-overlay {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--sidebar-duration) var(--sidebar-ease);
+}
+
+.sidebar-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Desktop: make sidebar slide-in like mobile */
+@media (min-width: 901px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    transform: translateX(0);
+    transition: transform var(--sidebar-duration) var(--sidebar-ease);
+    z-index: 100;
+    overflow-y: auto;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.18);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Collapsed state (when .open is NOT present) */
+  .sidebar:not(.open) {
+    transform: translateX(-100%);
+  }
+
+  .main-content {
+    margin-left: var(--sidebar-width);
+  }
+
+  /* When sidebar is collapsed, remove the left margin */
+  .sidebar:not(.open) ~ .main-content {
+    margin-left: 0;
+  }
+
+  .menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar-overlay,
+  .sidebar-overlay.open {
+    display: none;
+  }
+}
+
+/* Mobile: keep existing slide behavior, but add smoother overlay fade */
+@media (max-width: 900px) {
+  .sidebar {
+    transition: transform var(--sidebar-duration) var(--sidebar-ease);
+  }
+
+  .sidebar-overlay {
+    transition: opacity var(--sidebar-duration) var(--sidebar-ease);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sidebar-duration: 0ms;
+  }
+
+  .sidebar,
+  .main-content,
+  .sidebar-overlay {
+    transition: none !important;
+    animation: none !important;
+  }
+}
